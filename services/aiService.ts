@@ -1,9 +1,20 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the GoogleGenAI client with the API key from process.env.
-// Per guidelines, we assume process.env.API_KEY is available and valid.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization of the GoogleGenAI client.
+// This prevents the app from crashing immediately if the API key is missing.
+let ai: GoogleGenAI | null = null;
+
+try {
+    // We assume process.env.API_KEY is injected by the build system/environment.
+    if (process.env.API_KEY) {
+        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    } else {
+        console.warn("Gemini API Key is missing. AI features will be disabled.");
+    }
+} catch (error) {
+    console.error("Error initializing Gemini AI client:", error);
+}
 
 /**
  * Runs a given prompt against the Gemini API.
@@ -11,6 +22,21 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
  * @returns {Promise<string>} The AI's response or an error message.
  */
 async function runPrompt(prompt: string): Promise<string> {
+    if (!ai) {
+        // Try to re-initialize in case the env var was injected late (rare, but possible)
+        try {
+             if (process.env.API_KEY) {
+                ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+             }
+        } catch (e) {
+            console.error(e);
+        }
+        
+        if (!ai) {
+            return "⚠️ **AI Unavailable**: The AI service is not configured. Please ensure `API_KEY` is set in your environment variables.";
+        }
+    }
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',

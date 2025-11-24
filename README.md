@@ -76,14 +76,19 @@ With integrated **Google Gemini AI**, you can summarize entire repositories, ana
 
 You can deploy your own instance of GitStuf easily using the buttons below.
 
-### Prerequisites for Deployment
+### ⚠️ Important Deployment Note
+When deployed, your source code is compiled into a `dist` folder containing optimized `index.html` and `assets/`. This is normal behavior for React apps.
+
+The project includes a `_redirects` file for Netlify and a `vercel.json` for Vercel to ensure routing works correctly (fixing 404 errors on refresh).
+
+### Prerequisites
 To enable AI features, you need a **Google Gemini API Key**.
 1.  Get a key from [Google AI Studio](https://aistudiocdn.com/google-ai-studio).
 2.  Set the Environment Variable `API_KEY` in your deployment platform.
 
 | Platform | Deploy Link |
 | :--- | :--- |
-| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmhafizhdsy-netizen%2Fgitstuf&env=API_KEY) |
+| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fgitstuf&env=API_KEY) |
 | **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/your-username/gitstuf) |
 | **Netlify** | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/your-username/gitstuf) |
 
