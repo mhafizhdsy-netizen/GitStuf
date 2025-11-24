@@ -83,7 +83,7 @@ To enable AI features, you need a **Google Gemini API Key**.
 
 | Platform | Deploy Link |
 | :--- | :--- |
-| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fgitstuf&env=API_KEY) |
+| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmhafizhdsy-netizen%2Fgitstuf&env=API_KEY) |
 | **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/your-username/gitstuf) |
 | **Netlify** | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/your-username/gitstuf) |
 
