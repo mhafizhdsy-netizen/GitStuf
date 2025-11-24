@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { githubApi } from '../services/githubApi';
 import { Loader2, Scale, AlertTriangle } from 'lucide-react';

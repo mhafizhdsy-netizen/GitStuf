@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { Repo, Content, Commit, Issue, PullRequest, Contributor, RepoSearchResult, Branch, UserProfile } from '../types';
 

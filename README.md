@@ -76,12 +76,7 @@ With integrated **Google Gemini AI**, you can summarize entire repositories, ana
 
 You can deploy your own instance of GitStuf easily using the buttons below.
 
-### ⚠️ Important Deployment Note
-When deployed, your source code is compiled into a `dist` folder containing optimized `index.html` and `assets/`. This is normal behavior for React apps.
-
-The project includes a `_redirects` file for Netlify and a `vercel.json` for Vercel to ensure routing works correctly (fixing 404 errors on refresh).
-
-### Prerequisites
+### Prerequisites for Deployment
 To enable AI features, you need a **Google Gemini API Key**.
 1.  Get a key from [Google AI Studio](https://aistudiocdn.com/google-ai-studio).
 2.  Set the Environment Variable `API_KEY` in your deployment platform.
