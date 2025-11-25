@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
@@ -9,6 +10,7 @@ import TermsPage from './pages/TermsPage';
 import AboutPage from './pages/AboutPage';
 import DocsPage from './pages/DocsPage';
 import RoadmapPage from './pages/RoadmapPage';
+import LicensePage from './pages/LicensePage'; // Import halaman lisensi baru
 import { ThemeContext, ThemeMode, ThemeName } from './contexts/ThemeContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -68,7 +70,7 @@ export default function App() {
       localStorage.setItem('color_theme', themeName);
       localStorage.setItem('theme_mode', mode);
     } catch (e) {
-      // FIX: Explicitly convert the unknown error object `e` to a string to prevent a type error.
+      // FIX: The error object `e` in a catch block is of type 'unknown' and cannot be directly passed as an argument to console.error. It must be converted to a string.
       console.error('Could not access local storage', String(e));
     }
   }, [themeName, mode]);
@@ -95,6 +97,7 @@ export default function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/docs" element={<DocsPage />} />
                 <Route path="/roadmap" element={<RoadmapPage />} />
+                <Route path="/license" element={<LicensePage />} /> 
                 <Route path="*" element={<ErrorPage />} />
               </Routes>
               <SettingsModal />
