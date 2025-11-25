@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { githubApi } from '../services/githubApi';
 import { Content } from '../types';
@@ -67,32 +66,60 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
     if (content) {
         const lines = content.split('\n');
         const ranges: { start: number; end: number }[] = [];
-        const stack: number[] = []; // Stack of line numbers for opening braces
+        const stack: { line: number; token: string }[] = [];
+        
+        // Match pairs: { with }, [ with ], ( with ), and <tag> with </tag>
+        const openTokens: Record<string, string> = { '{': '}', '[': ']', '(': ')' };
+        const closeTokens: Record<string, string> = { '}': '{', ']': '[', ')': '(' };
+        const tokenRegex = /<([a-zA-Z0-9_:-]+)(?![^>]*\/>)[^>]*>|<\/([a-zA-Z0-9_:-]+)>|[{}[\]()]/g;
 
         lines.forEach((line, i) => {
             const lineNumber = i + 1;
-            // Simple heuristic: ignore lines that are likely comments or strings
             const trimmedLine = line.trim();
-            if (!trimmedLine.startsWith('//') && !trimmedLine.startsWith('*')) {
-                const openBraces = (line.match(/{/g) || []).length;
-                const closeBraces = (line.match(/}/g) || []).length;
-                
-                for (let j = 0; j < openBraces; j++) {
-                    stack.push(lineNumber);
-                }
-                for (let j = 0; j < closeBraces; j++) {
-                    const startLine = stack.pop();
-                    if (startLine && lineNumber > startLine) {
-                        // Add a minimum line count to be foldable
-                        if (lineNumber - startLine > 1) {
-                            ranges.push({ start: startLine, end: lineNumber });
+            // Basic comment skipping for performance
+            if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*') || trimmedLine.startsWith('#')) {
+                return;
+            }
+
+            let match;
+            while ((match = tokenRegex.exec(line)) !== null) {
+                const fullMatch = match[0];
+                const openingTag = match[1];
+                const closingTag = match[2];
+                const lastOpener = stack[stack.length - 1];
+
+                if (openingTag) { // HTML open tag
+                    stack.push({ line: lineNumber, token: openingTag });
+                } else if (fullMatch in openTokens) { // Bracket open
+                    stack.push({ line: lineNumber, token: fullMatch });
+                } else if (closingTag) { // HTML close tag
+                    if (lastOpener && lastOpener.token === closingTag) {
+                        const startInfo = stack.pop()!;
+                        if (lineNumber > startInfo.line) {
+                            ranges.push({ start: startInfo.line, end: lineNumber });
+                        }
+                    }
+                } else if (fullMatch in closeTokens) { // Bracket close
+                    if (lastOpener && lastOpener.token === closeTokens[fullMatch]) {
+                        const startInfo = stack.pop()!;
+                        if (lineNumber > startInfo.line) {
+                            ranges.push({ start: startInfo.line, end: lineNumber });
                         }
                     }
                 }
             }
         });
-        setFoldableRanges(ranges);
-        setFoldedLines(new Set()); // Reset folds on content change
+
+        // Sort by start line, then by end line descending to get largest blocks first
+        ranges.sort((a, b) => a.start - b.start || b.end - a.end);
+
+        // Filter out nested ranges that start on the same line, keeping the outermost
+        const uniqueRanges = ranges.filter((range, index, self) => 
+            index === 0 || range.start !== self[index - 1].start
+        );
+
+        setFoldableRanges(uniqueRanges);
+        setFoldedLines(new Set());
     }
   }, [content]);
 
@@ -257,7 +284,8 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
   const getLineProps = (lineNumber: number) => {
     const props: React.HTMLProps<HTMLElement> = {};
     const range = foldableRanges.find(r => r.start === lineNumber);
-    
+    const isFolded = foldedLines.has(lineNumber);
+
     const containingFold = foldableRanges.find(r => foldedLines.has(r.start) && lineNumber > r.start && lineNumber < r.end);
 
     if (containingFold) {
@@ -266,7 +294,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
     }
 
     if (range) {
-        props.className = 'foldable-line';
+        props.className = `foldable-line ${isFolded ? 'folded' : ''}`;
         props.onClick = (e) => {
             // Prevent text selection when folding
             if (window.getSelection()?.toString()) return;

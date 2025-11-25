@@ -219,12 +219,43 @@
 
       /* Styles for Code Folding */
       .foldable-line {
+        position: relative;
         cursor: pointer;
         transition: background-color 0.15s ease-in-out;
+        /* NO PADDING here to prevent layout shifts */
       }
       .foldable-line:hover {
-        /* Use transparent colors to work in light/dark mode */
         background-color: rgba(128, 128, 128, 0.08) !important;
+      }
+      .foldable-line::before {
+        content: '▾';
+        position: absolute;
+        /* Position indicator within the line number gutter, to the right of the number */
+        left: 36px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af; /* gray-400 */
+        font-size: 1rem; /* Increase size for visibility */
+        line-height: 1;
+        transition: color 0.2s ease;
+        z-index: 10;
+      }
+      .dark .foldable-line::before {
+        color: #6b7280; /* gray-500 */
+      }
+      .foldable-line:hover::before {
+        color: #374151; /* gray-700 */
+      }
+      .dark .foldable-line:hover::before {
+        color: #d1d5db; /* gray-300 */
+      }
+      .foldable-line.folded::before {
+        content: '▸';
       }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -38,7 +38,7 @@ const LicenseViewer: React.FC<LicenseViewerProps> = ({ owner, repo }) => {
 
   if (error || !license) {
     return (
-      <div className="text-center p-8 text-gray-500 dark:text-gray-400 flex flex-col items-center">
+      <div className="text-center p-8 text-gray-500 dark:text-base-400 flex flex-col items-center">
         <AlertTriangle size={32} className="mb-4 text-yellow-500" />
         {error || 'Could not load license.'}
       </div>
@@ -46,11 +46,11 @@ const LicenseViewer: React.FC<LicenseViewerProps> = ({ owner, repo }) => {
   }
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
-      <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 rounded-t-lg">
-        <h3 className="font-semibold flex items-center"><Scale size={16} className="mr-2" /> {license.name}</h3>
+    <div className="border border-base-200 dark:border-base-800 rounded-lg overflow-hidden">
+      <div className="p-4 bg-base-100 dark:bg-base-900 border-b border-base-200 dark:border-base-800 rounded-t-lg">
+        <h3 className="font-semibold flex items-center text-base-900 dark:text-base-100"><Scale size={16} className="mr-2" /> {license.name}</h3>
       </div>
-      <pre className="p-4 text-sm whitespace-pre-wrap font-mono bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 overflow-x-auto">
+      <pre className="p-4 text-sm whitespace-pre-wrap font-mono bg-white dark:bg-base-900 text-base-700 dark:text-base-300 overflow-x-auto">
         {license.content}
       </pre>
     </div>
