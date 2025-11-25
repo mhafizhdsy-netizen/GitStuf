@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
   const location = useLocation();
   
   // Pages that require the full, detailed footer
-  const fullFooterRoutes = ['/', '/about', '/terms', '/docs', '/roadmap'];
+  const fullFooterRoutes = ['/', '/about', '/terms', '/docs', '/roadmap', '/license'];
   const isFullFooter = fullFooterRoutes.includes(location.pathname);
 
   if (!isFullFooter) {
@@ -23,6 +23,7 @@ const Footer: React.FC = () => {
             <Link to="/" className="hover:text-primary transition-colors">Home</Link>
             <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <Link to="/terms" className="hover:text-primary transition-colors">Terms & Policy</Link>
+            <Link to="/license" className="hover:text-primary transition-colors">License</Link>
             <div className="flex items-center pl-2 border-l border-base-300 dark:border-base-700">
                 <span>Made with</span>
                 <Heart size={12} className="mx-1 text-red-500 fill-red-500" />
@@ -71,6 +72,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3 text-sm text-gray-600 dark:text-base-400">
               <li><Link to="/about" className="hover:text-primary transition-colors block py-1">About</Link></li>
               <li><Link to="/terms" className="hover:text-primary transition-colors block py-1">Terms & Policy</Link></li>
+              <li><Link to="/license" className="hover:text-primary transition-colors block py-1">License</Link></li>
             </ul>
           </div>
 
