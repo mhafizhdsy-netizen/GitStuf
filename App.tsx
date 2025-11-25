@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
@@ -70,7 +68,7 @@ export default function App() {
       localStorage.setItem('color_theme', themeName);
       localStorage.setItem('theme_mode', mode);
     } catch (e) {
-      // Fix: The error object `e` from a catch block is of type `unknown` and must be cast to a string.
+      // FIX: Explicitly convert the unknown error object `e` to a string to prevent a type error.
       console.error('Could not access local storage', String(e));
     }
   }, [themeName, mode]);

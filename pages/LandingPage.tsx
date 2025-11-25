@@ -311,7 +311,7 @@ export default function LandingPage() {
                 name="Sarah Jenkins"
                 role="Frontend Engineer"
                 text="The AI explanation feature is a game changer. I use it to quickly understand complex utility functions in open source repos."
-                avatar="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=random"
+                avatar="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
                 />
             </RevealOnScroll>
             <RevealOnScroll delay={100} direction="up">
@@ -319,7 +319,7 @@ export default function LandingPage() {
                 name="David Chen"
                 role="Full Stack Dev"
                 text="I love how fast it is compared to the native GitHub UI. The dark mode implementation is also spot on."
-                avatar="https://ui-avatars.com/api/?name=David+Chen&background=random"
+                avatar="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=100&q=80"
                 />
             </RevealOnScroll>
             <RevealOnScroll delay={200} direction="up">
@@ -327,7 +327,7 @@ export default function LandingPage() {
                 name="Alex Rivera"
                 role="Student"
                 text="GitStuf helps me learn by stripping away the noise. The Repo Health check gave me great tips for my own projects."
-                avatar="https://ui-avatars.com/api/?name=Alex+Rivera&background=random"
+                avatar="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80"
                 />
             </RevealOnScroll>
           </div>

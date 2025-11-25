@@ -1,22 +1,31 @@
-
 # GitStuf 🚀
 
 <div align="center">
-  <img src="https://img.shields.io/badge/React-19-blue?logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind-CSS-38b2ac?logo=tailwind-css&logoColor=white" />
-  <img src="https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google-gemini&logoColor=white" />
-  <img src="https://img.shields.io/badge/License-MIT-green" />
+  <img src="https://img.shields.io/badge/React-19-blue?logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-CSS-38b2ac?logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google-gemini&logoColor=white" alt="Gemini AI" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </div>
 
 <br />
 
 <div align="center">
-  <strong>Explore Code. Understand Faster.</strong><br />
-  A modern, minimalist, and AI-powered GitHub repository explorer.
+  <strong>Explore Code. Understand Faster.</strong>
+  <p>A modern, minimalist, and AI-powered GitHub repository explorer.</p>
+</div>
+
+<div align="center">
+  <a href="https://your-live-demo-url.com" target="_blank"><strong>View Live Demo »</strong></a>
 </div>
 
 <br />
+
+<!-- Placeholder for a high-quality screenshot or GIF of the application in action -->
+<!-- <p align="center">
+  <img src="link_to_your_screenshot.png" alt="GitStuf Application Screenshot" width="800"/>
+</p> -->
+
 
 ## 🌟 Overview
 
@@ -34,33 +43,28 @@ With integrated **Google Gemini AI**, you can summarize entire repositories, ana
 *   **Smart Code Explanation**: Select *any* line of code in the file viewer and ask the AI to explain it in plain English.
 
 ### ⚡ Modern Browsing Experience
-*   **Blazing Fast File Explorer**: Navigate file trees instantly without page reloads.
+*   **Blazing Fast File Explorer**: Navigate file trees instantly without page reloads. Supports intelligent code folding for all languages (`{}`, `[]`, `()`, and HTML tags).
 *   **Rich Content Viewer**: 
-    *   Syntax highlighting for 40+ languages.
-    *   Markdown rendering with support for HTML and GitHub-flavored tables.
+    *   Syntax highlighting for 40+ languages with customizable themes.
+    *   Flawless Markdown rendering with relative image and link resolution.
     *   Image preview support (SVG, PNG, JPG).
-*   **Deep Search**: Advanced search capabilities with pagination support up to 1000 results.
+*   **Deep Search & Pagination**: Advanced search with robust sorting and pagination support up to 1000 results.
 
-### 🎨 Customizable UI
+### 🎨 Customizable & Elegant UI
 *   **Dark & Light Mode**: Seamlessly switch themes based on your preference or system settings.
-*   **Syntax Highlighting Themes**: Choose from popular themes like **Dracula**, **GitHub Light**, **Monokai**, **Nord**, and more.
+*   **Multiple Color Themes**: Choose from a variety of color palettes like Dracula, Solarized, Nord, and more to personalize your experience.
 *   **Responsive Design**: A mobile-first approach ensures you can read code comfortably on any device.
 
-### 📊 Comprehensive Data
-*   **Repo Details**: View commits, issues, pull requests, and license info in dedicated tabs.
-*   **Visual Stats**: Beautiful language breakdown bars and contributor lists.
-*   **User Profiles**: Explore developer profiles, bio, social links, and their repositories.
-
 ### 🔒 Privacy First
-*   **Client-Side Only**: We do not have a backend database.
+*   **Client-Side Only**: We do not have a backend database. Your data stays with you.
 *   **Local Storage**: Your GitHub Personal Access Token (PAT) and settings are stored securely in your browser's LocalStorage.
-*   **Direct API Calls**: The app communicates directly with GitHub and Google APIs.
+*   **Direct API Calls**: The app communicates directly and securely with the GitHub and Google APIs.
 
 ---
 
 ## 🛠️ Tech Stack
 
-*   **Framework**: React 19 (via Vite)
+*   **Framework**: React 19 (bootstrapped with Vite)
 *   **Language**: TypeScript
 *   **Styling**: Tailwind CSS
 *   **Routing**: React Router DOM v6+
@@ -68,29 +72,18 @@ With integrated **Google Gemini AI**, you can summarize entire repositories, ana
 *   **Icons**: Lucide React
 *   **AI**: Google Generative AI SDK (`@google/genai`)
 *   **Markdown**: React Markdown, Rehype Raw, Remark GFM
+*   **Syntax Highlighting**: `react-syntax-highlighter`
 *   **Data Fetching**: Axios
 
 ---
 
-## 🚀 Deployment
+## 🚀 Getting Started (Local Development)
 
-You can deploy your own instance of GitStuf easily using the buttons below.
+### Prerequisites
+*   Node.js (v18 or higher recommended)
+*   npm or yarn
 
-### Prerequisites for Deployment
-To enable AI features, you need a **Google Gemini API Key**.
-1.  Get a key from [Google AI Studio](https://aistudiocdn.com/google-ai-studio).
-2.  Set the Environment Variable `API_KEY` in your deployment platform.
-
-| Platform | Deploy Link |
-| :--- | :--- |
-| **Vercel** | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fgitstuf&env=API_KEY) |
-| **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/your-username/gitstuf) |
-| **Netlify** | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/your-username/gitstuf) |
-
----
-
-## 💻 Local Development
-
+### Installation
 1.  **Clone the repository**
     ```bash
     git clone https://github.com/your-username/gitstuf.git
@@ -103,17 +96,18 @@ To enable AI features, you need a **Google Gemini API Key**.
     ```
 
 3.  **Configure Environment Variables**
-    Create a `.env` file in the root directory:
+    Create a `.env` file in the root directory and add your Google Gemini API Key.
     ```env
-    # Required for AI Features
+    # Required for all AI Features
     API_KEY=your_google_gemini_api_key
     ```
-    *Note: In the provided codebase, `process.env.API_KEY` is polyfilled or replaced by the bundler.*
+    You can get a key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 4.  **Start the development server**
     ```bash
     npm run dev
     ```
+    The application will be available at `http://localhost:5173`.
 
 ---
 
@@ -122,12 +116,27 @@ To enable AI features, you need a **Google Gemini API Key**.
 ### GitHub Rate Limits
 Without a token, GitHub limits you to **60 requests/hour**. To increase this to **5,000 requests/hour**:
 1.  Click the **Settings** (Gear icon) in the header.
-2.  Enter a [GitHub Personal Access Token](https://github.com/settings/tokens/new?scopes=public_repo).
-3.  Click Save.
+2.  Generate a [GitHub Personal Access Token](https://github.com/settings/tokens/new?scopes=public_repo) with `public_repo` scope.
+3.  Paste the token into the input field and click Save.
 
-### Syntax Themes
+### Themes
 1.  Open **Settings**.
-2.  Select your preferred **Syntax Highlighting Theme** from the dropdown.
+2.  Select your preferred **Color Theme** and **Syntax Highlighting Theme** from the dropdowns.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! If you have a feature request, bug report, or want to contribute code, please follow these steps:
+
+1.  **Fork the repository.**
+2.  Create a new branch (`git checkout -b feature/your-feature-name`).
+3.  Make your changes.
+4.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+5.  Push to the branch (`git push origin feature/your-feature-name`).
+6.  Open a **Pull Request**.
+
+Please ensure your code follows the existing style and that you test your changes thoroughly.
 
 ---
 
