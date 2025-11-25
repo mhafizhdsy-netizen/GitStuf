@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeContext } from '../../contexts/ThemeContext';
 import { Sun, Moon, Settings, ArrowLeft } from 'lucide-react';
@@ -11,26 +11,27 @@ const Header: React.FC = () => {
   const { openSettingsModal } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isAnimating, setIsAnimating] = useState(false);
 
   if (!themeContext) {
     return null;
   }
 
-  const { theme, setTheme } = themeContext;
+  const { mode, setMode } = themeContext;
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    setIsAnimating(true);
+    setMode(mode === 'light' ? 'dark' : 'light');
+    setTimeout(() => setIsAnimating(false), 500);
   };
 
   const showBackButton = location.pathname !== '/';
+  const isLandingPage = location.pathname === '/';
 
   const handleBack = () => {
-    // Check if there is history to go back to.
-    // window.history.state.idx > 0 indicates we are not at the start of the history stack.
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1);
     } else {
-      // If opened in new tab or no history, go to main search page
       navigate('/search');
     }
   };
@@ -51,32 +52,36 @@ const Header: React.FC = () => {
                 </button>
               )}
               <Link to="/" className="flex items-center space-x-2.5 text-xl font-bold text-gray-800 dark:text-gray-100 group">
-                <GitStufIcon className="w-8 h-8 group-hover:rotate-12 transition-transform duration-300" />
+                {isLandingPage && (
+                  <GitStufIcon className="w-8 h-8 group-hover:rotate-12 transition-transform duration-300" />
+                )}
                 <span className="hidden sm:inline font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                     GitStuf
                 </span>
               </Link>
               
               <nav className="hidden md:flex ml-6 space-x-6 text-sm font-medium text-gray-600 dark:text-gray-400">
-                <Link to="/about" className="hover:text-primary transition-colors">Docs</Link>
+                <Link to="/docs" className="hover:text-primary transition-colors">Docs</Link>
                 <Link to="/search" className="hover:text-primary transition-colors">Explore</Link>
               </nav>
             </div>
             
             <div className="flex items-center space-x-2">
-              <button
-                onClick={openSettingsModal}
-                className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition-colors"
-                aria-label="Open settings"
-              >
-                <Settings size={20} />
-              </button>
+              {!isLandingPage && (
+                <button
+                  onClick={openSettingsModal}
+                  className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition-colors"
+                  aria-label="Open settings"
+                >
+                  <Settings size={20} />
+                </button>
+              )}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition-colors"
+                className={`p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition-all duration-500 ease-in-out ${isAnimating ? 'rotate-[360deg]' : ''}`}
                 aria-label="Toggle theme"
               >
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
             </div>
           </div>

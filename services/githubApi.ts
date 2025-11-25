@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { Repo, Content, Commit, Issue, PullRequest, Contributor, RepoSearchResult, Branch, UserProfile } from '../types';
 
@@ -17,14 +18,30 @@ API.interceptors.request.use(config => {
 });
 
 export const githubApi = {
-  searchRepositories: (query: string, sort = 'stars', order = 'desc', page = 1) =>
-    API.get<RepoSearchResult>(`/search/repositories?q=${query}&sort=${sort}&order=${order}&page=${page}&per_page=12`),
+  searchRepositories: (query: string, sort?: string, order = 'desc', page = 1) => {
+    const params = new URLSearchParams();
+    params.append('q', query);
+    params.append('page', page.toString());
+    params.append('per_page', '12');
+    
+    // GitHub API defaults to 'best match' if sort is not provided.
+    // We filter out 'best-match' string which is used for UI state.
+    if (sort && sort !== 'best-match') {
+        params.append('sort', sort);
+        params.append('order', order);
+    }
+    
+    return API.get<RepoSearchResult>(`/search/repositories?${params.toString()}`);
+  },
   
   getRepository: (owner: string, repo: string) =>
     API.get<Repo>(`/repos/${owner}/${repo}`),
   
   getContents: (owner: string, repo: string, path = '', ref?: string) =>
     API.get<Content[] | Content>(`/repos/${owner}/${repo}/contents/${path}`, { params: ref ? { ref } : {} }),
+
+  getTree: (owner: string, repo: string, sha: string, recursive = false) =>
+    API.get<{tree: {path: string, mode: string, type: string, size?: number, sha: string}[], truncated: boolean}>(`/repos/${owner}/${repo}/git/trees/${sha}${recursive ? '?recursive=1' : ''}`),
 
   getReadme: (owner: string, repo: string, ref?: string) =>
     API.get<Content>(`/repos/${owner}/${repo}/readme`, { params: ref ? { ref } : {} }),

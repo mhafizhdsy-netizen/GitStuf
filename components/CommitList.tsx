@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { githubApi } from '../services/githubApi';
@@ -27,7 +26,9 @@ const CommitList: React.FC<CommitListProps> = ({ owner, repo }) => {
           setHasMore(false);
         }
       })
-      .catch(() => setError('Failed to fetch commits.'))
+      .catch((err) => {
+        setError('Failed to fetch commits.');
+      })
       .finally(() => setLoading(false));
   }, [owner, repo, page]);
 

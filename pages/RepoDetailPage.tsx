@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { githubApi } from '../services/githubApi';
 import { Repo, Contributor, Branch } from '../types';
-import { ServerCrash, Code, GitCommit, AlertCircle, GitPullRequest, Scale, FileText, X, PanelRightOpen } from 'lucide-react';
+import { Code, GitCommit, AlertCircle, GitPullRequest, Scale, FileText, PanelRightOpen, X } from 'lucide-react';
 import RepoHeader from '../components/RepoHeader';
 import { RepoSidebar } from '../components/RepoSidebar';
 import FileExplorer from '../components/FileExplorer';
@@ -13,7 +12,8 @@ import PullRequestList from '../components/PullRequestList';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import LicenseViewer from '../components/LicenseViewer';
 import Header from '../components/common/Header';
-import { useSettings } from '../contexts/SettingsContext';
+import Footer from '../components/common/Footer';
+import ErrorDisplay from '../components/common/ErrorDisplay';
 
 const TABS = [
   { name: 'Code', icon: Code },
@@ -106,7 +106,6 @@ const SkeletonLoader: React.FC = () => (
 
 export default function RepoDetailPage() {
   const { owner, name, '*': splat } = useParams<{ owner:string; name: string; '*': string }>();
-  const { openSettingsModal } = useSettings();
   
   const [repo, setRepo] = useState<Repo | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -115,7 +114,7 @@ export default function RepoDetailPage() {
   const [readmeContent, setReadmeContent] = useState<string | null>(null);
   const [readmePath, setReadmePath] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   
   const [activeTab, setActiveTab] = useState('Code');
@@ -124,18 +123,14 @@ export default function RepoDetailPage() {
   const pathSegments = splat?.split('/').filter(Boolean) ?? [];
   const viewType = pathSegments[0] === 'blob' ? 'blob' : 'tree';
   
-  // Note: We can't determine the exact branch just from URL reliably without knowing branches, 
-  // but we default to repo default if available.
   const currentBranchFromUrl = (viewType === 'blob' || viewType === 'tree') ? pathSegments[1] : undefined;
   const branch = currentBranchFromUrl || repo?.default_branch || 'main';
   
   const contentPath = pathSegments.slice(2).join('/');
   const currentPath = viewType === 'tree' ? contentPath : (viewType === 'blob' ? contentPath.split('/').slice(0, -1).join('/') : '');
 
-  // Helper to safely decode base64 with Unicode support
   const safeBase64Decode = (str: string) => {
     try {
-        // Robust decoding for UTF-8 characters
         return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
@@ -152,13 +147,10 @@ export default function RepoDetailPage() {
     setError(null);
     
     try {
-      // 1. Fetch Repo Details First to get the correct default branch
       const repoRes = await githubApi.getRepository(owner, name);
       const newRepo = repoRes.data;
       setRepo(newRepo);
 
-      // 2. Determine the effective branch to use for subsequent calls
-      // If the URL specifies a branch, use it. Otherwise use the repo's default branch.
       let effectiveBranch = newRepo.default_branch;
       if (splat) {
         const parts = splat.split('/').filter(Boolean);
@@ -167,7 +159,6 @@ export default function RepoDetailPage() {
         }
       }
 
-      // 3. Fetch parallel data using the correct branch
       const [langRes, contribRes, readmeRes, branchesRes] = await Promise.all([
         githubApi.getLanguages(owner, name),
         githubApi.getContributors(owner, name),
@@ -190,38 +181,31 @@ export default function RepoDetailPage() {
         setBranches(branchesRes.data);
       }
     } catch (err: any) {
-      if (err.response && err.response.status === 403) {
-        setError('API rate limit exceeded. Your token might be invalid or missing the `public_repo` scope.');
-        openSettingsModal();
-      } else {
-        setError('Failed to fetch repository data. Repository might not exist.');
-      }
+      setError(err);
       console.error(err);
     } finally {
       setLoading(false);
       setTimeout(() => setIsContentLoaded(true), 100);
     }
-  }, [owner, name, splat, openSettingsModal]);
+  }, [owner, name, splat]);
 
   useEffect(() => {
     fetchRepoData();
   }, [owner, name]);
 
   if (loading) {
-    return <><Header /><SkeletonLoader /></>;
+    return <div className="flex flex-col min-h-screen"><Header /><SkeletonLoader /><Footer /></div>;
   }
 
   if (error || !repo) {
     return (
-      <>
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <div className="flex flex-col justify-center items-center h-screen text-center">
-          <ServerCrash size={64} className="text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Error</h2>
-          <p className="text-gray-600 dark:text-base-300 max-w-md">{error}</p>
-          <Link to="/" className="mt-6 px-5 py-2.5 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary-dark transition-colors">Go back home</Link>
+        <div className="flex-grow flex items-center justify-center">
+            <ErrorDisplay error={error} onRetry={fetchRepoData} fullScreen />
         </div>
-      </>
+        <Footer />
+      </div>
     );
   }
 
@@ -264,9 +248,9 @@ export default function RepoDetailPage() {
   };
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <div className={`container mx-auto px-4 py-8 transition-opacity duration-300 ${isContentLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`container mx-auto px-4 py-8 transition-opacity duration-300 flex-grow ${isContentLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <RepoHeader repo={repo} />
         
         <div className="lg:flex lg:space-x-8 mt-6 lg:mt-10">
@@ -334,6 +318,7 @@ export default function RepoDetailPage() {
           </div>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }

@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Copy, Check } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
+import { useToast } from '../contexts/ToastContext';
 
 interface MarkdownRendererProps {
   content: string;
@@ -16,8 +17,9 @@ interface MarkdownRendererProps {
 }
 
 const CodeBlock: React.FC<{ className?: string, children: React.ReactNode[] | React.ReactNode }> = ({ className, children }) => {
-  const [copied, setCopied] = useState(false);
   const { activeSyntaxTheme } = useSettings();
+  const { addToast } = useToast();
+  const [copied, setCopied] = React.useState(false);
 
   const lang = /language-(\w+)/.exec(className || '')?.[1] || 'text';
   const codeString = String(children).replace(/\n$/, '');
@@ -25,32 +27,47 @@ const CodeBlock: React.FC<{ className?: string, children: React.ReactNode[] | Re
   const handleCopy = () => {
     navigator.clipboard.writeText(codeString).then(() => {
       setCopied(true);
+      addToast('Code copied to clipboard', 'success');
       setTimeout(() => setCopied(false), 2000);
     });
   };
 
   return (
-    <div className="my-4 rounded-lg overflow-hidden bg-base-100 dark:bg-base-900 border border-base-200 dark:border-base-800">
-      <div className="flex justify-between items-center px-4 py-2 bg-base-100 dark:bg-base-800/50 border-b border-base-200 dark:border-base-800">
-        <span className="text-xs font-sans text-gray-500 dark:text-base-400">{lang}</span>
-        <button
-          onClick={handleCopy}
-          className="flex items-center text-xs text-gray-500 dark:text-base-400 hover:text-gray-800 dark:hover:text-white transition"
-          aria-label="Copy code"
-        >
-          {copied ? <Check size={14} className="mr-1 text-green-500" /> : <Copy size={14} className="mr-1" />}
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
+    <div className="my-4 relative group rounded-md overflow-hidden bg-[#f6f8fa] dark:bg-[#161b22] border border-[#d0d7de] dark:border-[#30363d]">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#eff1f3] dark:bg-[#21262d] border-b border-[#d0d7de] dark:border-[#30363d] text-xs font-mono text-gray-600 dark:text-gray-300 select-none">
+        <span className="font-bold">{lang}</span>
       </div>
+      
       <SyntaxHighlighter
-        style={activeSyntaxTheme}
-        language={lang}
-        PreTag="div"
-        customStyle={{ margin: 0, padding: '1rem', background: 'transparent' }}
-        codeTagProps={{ style: { fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace', fontSize: '14px' } }}
+          style={activeSyntaxTheme}
+          language={lang}
+          PreTag="div"
+          customStyle={{ 
+            margin: 0, 
+            padding: '16px', 
+            paddingBottom: '40px', // Extra padding to prevent button overlap
+            background: 'transparent', // Ensure text has no background so container bg shows
+            fontSize: '85%',
+            lineHeight: '1.45',
+          }}
+          codeTagProps={{ 
+            style: { 
+                fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace',
+                background: 'transparent', // Ensure code tag has no background
+            } 
+          }}
       >
-        {codeString}
+          {codeString}
       </SyntaxHighlighter>
+
+      <button
+        onClick={handleCopy}
+        className="absolute bottom-2 right-2 z-10 p-2 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-all duration-200 opacity-0 group-hover:opacity-100 focus:opacity-100 shadow-sm backdrop-blur-sm"
+        aria-label="Copy code"
+        title="Copy code"
+      >
+        {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+      </button>
     </div>
   );
 };
@@ -90,13 +107,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, owner, rep
     if (!owner || !repoName || !branch) return uri;
 
     const currentPath = filePath || '';
-    // Determine the "directory" of the current file.
-    // If filePath is "src/utils.ts", dir is "src/".
-    // If filePath is "README.md", dir is "".
     const pathDir = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/') + 1) : '';
 
     try {
-        // Use URL constructor for robust relative path resolution
         const dummyOrigin = 'https://dummy.base';
         const dummyBase = `${dummyOrigin}/${pathDir}`;
         const resolvedUrl = new URL(uri, dummyBase);
@@ -105,7 +118,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, owner, rep
         if (type === 'image') {
              return `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${resolvedPath}`;
         } else {
-             // For links, redirect to our app's blob viewer so users stay in the SPA
              return `#/repo/${owner}/${repoName}/blob/${branch}/${resolvedPath}`;
         }
     } catch (e) {

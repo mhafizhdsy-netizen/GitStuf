@@ -91,10 +91,10 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const activeSyntaxTheme = useMemo(() => {
     if (syntaxThemeKey === 'auto' || !SYNTAX_THEMES[syntaxThemeKey]) {
       // Default behavior: VS Dark for Dark mode, VS Light for Light mode
-      return themeContext?.theme === 'dark' ? vscDarkPlus : vs;
+      return themeContext?.mode === 'dark' ? vscDarkPlus : vs;
     }
     return SYNTAX_THEMES[syntaxThemeKey].style;
-  }, [syntaxThemeKey, themeContext?.theme]);
+  }, [syntaxThemeKey, themeContext?.mode]);
 
   // --- Modal Logic ---
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

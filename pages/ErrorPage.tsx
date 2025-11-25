@@ -1,28 +1,37 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Frown } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import Header from '../components/common/Header';
+import Footer from '../components/common/Footer';
+import ErrorDisplay from '../components/common/ErrorDisplay';
+import { Home } from 'lucide-react';
 
 const ErrorPage: React.FC = () => {
+  const location = useLocation();
+  // Allow passing an error object via navigation state
+  const stateError = location.state?.error;
+
+  const default404 = {
+    response: { status: 404 },
+    message: "The page you are looking for does not exist."
+  };
+
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] text-center px-4">
-        <Frown className="w-24 h-24 text-blue-500 mb-6" />
-        <h1 className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-2">404</h1>
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-4">Page Not Found</h2>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8">
-          Sorry, the page you are looking for does not exist. It might have been moved or deleted.
-        </p>
+      <div className="flex-grow flex flex-col items-center justify-center p-4">
+        <ErrorDisplay error={stateError || default404} fullScreen={true} />
+        
         <Link
           to="/"
-          className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors"
+          className="mt-6 flex items-center px-6 py-3 bg-base-100 dark:bg-base-800 text-gray-700 dark:text-white font-semibold rounded-lg hover:bg-base-200 dark:hover:bg-base-700 transition-colors"
         >
+          <Home size={18} className="mr-2" />
           Go back home
         </Link>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 };
 

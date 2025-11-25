@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { githubApi } from '../services/githubApi';
@@ -7,6 +6,7 @@ import { Loader2, ArrowLeft, GitBranch, ChevronDown, Check, Search } from 'lucid
 import { getFileIcon } from '../utils/fileIcons';
 import { formatFileSize } from '../utils/formatters';
 import FileViewer from './FileViewer';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface FileExplorerProps {
   owner: string;
@@ -24,6 +24,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ owner, name, path, branch, 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [branchSearchTerm, setBranchSearchTerm] = useState('');
   const [fileSearchTerm, setFileSearchTerm] = useState('');
+  const [folderSizes, setFolderSizes] = useState<Record<string, number>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
@@ -37,6 +38,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ owner, name, path, branch, 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Fetch directory contents
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -61,6 +63,43 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ owner, name, path, branch, 
       })
       .finally(() => setLoading(false));
   }, [owner, name, path, branch, navigate]);
+
+  // Calculate folder sizes
+  useEffect(() => {
+    // Reset sizes when branch/repo changes
+    setFolderSizes({});
+    
+    const calculateSizes = async () => {
+      try {
+        // Fetch the full recursive tree for the current branch
+        const { data } = await githubApi.getTree(owner, name, branch, true);
+        
+        const sizes: Record<string, number> = {};
+        
+        data.tree.forEach((item) => {
+          if (item.type === 'blob' && item.size) {
+            // item.path is the full path from root, e.g., "src/components/Header.tsx"
+            const parts = item.path.split('/');
+            
+            // Accumulate size for every parent directory in the path
+            let currentPath = '';
+            for (let i = 0; i < parts.length - 1; i++) {
+              currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i];
+              sizes[currentPath] = (sizes[currentPath] || 0) + item.size;
+            }
+          }
+        });
+        
+        setFolderSizes(sizes);
+      } catch (error) {
+        // Silently fail if tree fetch fails (e.g. rate limit or too large)
+        // We'll just show 'Folder' in that case
+        console.error("Failed to calculate folder sizes:", error);
+      }
+    };
+
+    calculateSizes();
+  }, [owner, name, branch]);
   
   const handleBranchSelect = (newBranch: string) => {
     setIsDropdownOpen(false);
@@ -97,15 +136,15 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ owner, name, path, branch, 
   }
 
   return (
-    <div className="border border-base-200 dark:border-base-700 rounded-lg">
-      <div className="p-3 bg-base-50 dark:bg-base-900 border-b border-base-200 dark:border-base-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div className="bg-white dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-lg shadow-sm overflow-hidden">
+      <div className="p-3 bg-base-50 dark:bg-base-800 rounded-t-lg border-b border-base-200 dark:border-base-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 min-w-0">
           
           {/* Branch Selector */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-white dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-lg hover:bg-base-100 dark:hover:bg-base-700 transition-colors group shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-white dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-lg hover:bg-base-50 dark:hover:bg-base-700 transition-colors group shadow-sm"
               title="Switch branch"
             >
               <GitBranch size={14} className="text-gray-500 group-hover:text-primary transition-colors" />
@@ -114,103 +153,120 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ owner, name, path, branch, 
             </button>
             
             {isDropdownOpen && (
-              <div className="absolute z-10 mt-2 w-64 origin-top-left rounded-lg bg-white dark:bg-base-900 shadow-xl border border-base-200 dark:border-base-700 focus:outline-none animate-fade-in">
-                <div className="p-2">
+              <div className="absolute top-full left-0 mt-1 w-64 max-h-60 overflow-y-auto bg-white dark:bg-base-900 border border-base-200 dark:border-base-700 rounded-lg shadow-xl z-20 animate-fade-in custom-scrollbar">
+                <div className="sticky top-0 p-2 bg-white dark:bg-base-900 border-b border-base-200 dark:border-base-700">
                   <input
                     type="text"
-                    placeholder="Find a branch..."
                     value={branchSearchTerm}
-                    onChange={e => setBranchSearchTerm(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-base-300 dark:border-base-700 rounded-md bg-base-50 dark:bg-base-800 focus:ring-2 focus:ring-primary focus:outline-none"
+                    onChange={(e) => setBranchSearchTerm(e.target.value)}
+                    placeholder="Find a branch..."
+                    className="w-full px-3 py-1.5 text-xs bg-base-50 dark:bg-base-800 border border-base-300 dark:border-base-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-base-200 placeholder-gray-400"
                     autoFocus
                   />
                 </div>
-                <ul className="max-h-56 overflow-y-auto">
-                  {filteredBranches.map(b => (
-                    <li key={b.name}>
-                      <button
-                        onClick={() => handleBranchSelect(b.name)}
-                        className="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-base-100 dark:hover:bg-base-800 flex items-center justify-between transition-colors"
-                      >
-                        <span className="truncate">{b.name}</span>
-                        {b.name === branch && <Check size={14} className="text-primary" />}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {filteredBranches.map(b => (
+                  <button
+                    key={b.name}
+                    onClick={() => handleBranchSelect(b.name)}
+                    className="w-full text-left px-4 py-2 text-xs hover:bg-base-50 dark:hover:bg-base-800 flex items-center justify-between text-gray-700 dark:text-base-300"
+                  >
+                    <span className="truncate">{b.name}</span>
+                    {branch === b.name && <Check size={12} className="text-primary" />}
+                  </button>
+                ))}
+                {filteredBranches.length === 0 && (
+                  <div className="p-4 text-center text-xs text-gray-500">No branches found</div>
+                )}
               </div>
             )}
           </div>
-
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden">
-            <Link to={`/repo/${owner}/${name}/tree/${branch}`} className="hover:underline text-primary font-semibold flex-shrink-0 ml-1">{name}</Link>
-            {breadcrumbs.length > 0 && <span className="mx-2">/</span>}
-            <div className="flex items-center overflow-x-auto whitespace-nowrap scrollbar-hide">
-              {breadcrumbs.map((crumb, i) => (
-                <React.Fragment key={i}>
-                  <Link
-                    to={`/repo/${owner}/${name}/tree/${branch}/${breadcrumbs.slice(0, i + 1).join('/')}`}
-                    className="hover:underline text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light"
-                  >
-                    {crumb}
-                  </Link>
-                  {i < breadcrumbs.length - 1 && <span className="mx-2">/</span>}
-                </React.Fragment>
-              ))}
-            </div>
+          
+          {/* Breadcrumbs */}
+          <div className="flex items-center text-sm overflow-x-auto whitespace-nowrap scrollbar-hide mask-fade-right">
+             <Link to={`/repo/${owner}/${name}/tree/${branch}`} className="font-semibold text-primary hover:underline ml-1">
+               {name}
+             </Link>
+             {breadcrumbs.map((part, index) => {
+               const routeTo = breadcrumbs.slice(0, index + 1).join('/');
+               return (
+                 <React.Fragment key={index}>
+                   <span className="mx-1 text-gray-400">/</span>
+                   <Link 
+                     to={`/repo/${owner}/${name}/tree/${branch}/${routeTo}`}
+                     className={`hover:text-primary hover:underline ${index === breadcrumbs.length - 1 ? 'font-bold text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-base-400'}`}
+                   >
+                     {part}
+                   </Link>
+                 </React.Fragment>
+               );
+             })}
           </div>
         </div>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search files..."
-            value={fileSearchTerm}
-            onChange={e => setFileSearchTerm(e.target.value)}
-            className="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs border border-base-300 dark:border-base-700 rounded-md bg-white dark:bg-base-800 focus:ring-2 focus:ring-primary focus:outline-none"
-          />
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+
+        {/* File Search */}
+        <div className="relative group" title="Filter files in current directory">
+           <input
+             type="text"
+             value={fileSearchTerm}
+             onChange={(e) => setFileSearchTerm(e.target.value)}
+             placeholder="Go to file..."
+             className="w-full sm:w-48 sm:focus:w-64 pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 ease-in-out placeholder-gray-400 dark:placeholder-gray-500 text-gray-700 dark:text-base-200"
+           />
+           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" />
         </div>
       </div>
-      <div>
+
+      {/* File List */}
+      <div className="divide-y divide-base-200 dark:divide-base-800 bg-white dark:bg-base-900">
         {path && (
-          <Link
-            to={`/repo/${owner}/${name}/tree/${branch}/${path.substring(0, path.lastIndexOf('/'))}`}
-            className="flex items-center p-2.5 text-sm hover:bg-base-100 dark:hover:bg-base-800 transition-colors border-b border-base-200 dark:border-base-700"
-          >
-            <ArrowLeft size={16} className="mr-2 text-primary" />
-            <span className="text-primary font-medium">..</span>
-          </Link>
+          <div className="px-4 py-2 hover:bg-base-50 dark:hover:bg-base-800 transition-colors">
+            <Link to={`/repo/${owner}/${name}/tree/${branch}/${breadcrumbs.slice(0, -1).join('/')}`} className="flex items-center text-primary text-sm font-medium">
+              <span className="mr-2">..</span>
+              <span className="text-xs text-gray-500">Go back</span>
+            </Link>
+          </div>
         )}
         
-        {filteredContents.length === 0 && (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            {contents.length > 0 ? 'No files matching your search.' : 'This directory is empty.'}
+        {filteredContents.length > 0 ? (
+          filteredContents.map((item) => (
+            <div 
+              key={item.path}
+              className="group flex items-center justify-between px-4 py-2.5 hover:bg-base-50 dark:hover:bg-base-800 transition-colors cursor-pointer"
+              onClick={() => item.type === 'dir' ? navigate(`/repo/${owner}/${name}/tree/${branch}/${item.path}`) : handleFileClick(item)}
+            >
+              <div className="flex items-center min-w-0 flex-1 mr-4">
+                <div className="mr-3 flex-shrink-0">
+                  {getFileIcon(item.name, item.type)}
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-200 truncate group-hover:text-primary transition-colors">
+                  {item.name}
+                </span>
+              </div>
+              
+              <div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 font-mono">
+                {item.type === 'dir' ? (
+                   folderSizes[item.path] ? formatFileSize(folderSizes[item.path]) : 'Folder'
+                ) : (
+                   formatFileSize(item.size)
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center text-gray-500 dark:text-base-400 text-sm">
+            No files found.
           </div>
         )}
-
-        {filteredContents.map(item => (
-          <div
-            key={item.sha}
-            onClick={() => item.type === 'file' ? handleFileClick(item) : navigate(`/repo/${owner}/${name}/tree/${branch}/${item.path}`)}
-            className="flex items-center justify-between p-2.5 text-sm hover:bg-base-50 dark:hover:bg-base-800/50 transition-colors cursor-pointer border-b border-base-200 dark:border-base-700 last:border-b-0 group"
-          >
-            <div className="flex items-center truncate min-w-0">
-              <span className="mr-3 flex-shrink-0">{getFileIcon(item.name, item.type)}</span>
-              <span className="truncate group-hover:text-primary transition-colors">{item.name}</span>
-            </div>
-            <div className="text-gray-500 dark:text-gray-400 text-xs hidden md:block ml-4 flex-shrink-0 font-mono">
-              {item.type === 'file' && formatFileSize(item.size)}
-            </div>
-          </div>
-        ))}
       </div>
+
+      {/* File Viewer Modal */}
       {selectedFile && (
-        <FileViewer
+        <FileViewer 
           owner={owner}
           repoName={name}
           file={selectedFile}
-          onClose={closeFileViewer}
           branch={branch}
+          onClose={closeFileViewer}
         />
       )}
     </div>

@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { githubApi } from '../services/githubApi';
 import { Content } from '../types';
-import { Loader2, X, Download, File as FileIcon, Sparkles, Copy, Check } from 'lucide-react';
+import { Loader2, X, Download, File as FileIcon, Sparkles, Copy } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import AIExplanationModal from './AIExplanationModal';
 import { useSettings } from '../contexts/SettingsContext';
 import { getLanguageFromFilename } from '../utils/languageUtils';
+import { useToast } from '../contexts/ToastContext';
 
 interface FileViewerProps {
   owner: string;
@@ -27,9 +28,15 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
   const [selectedText, setSelectedText] = useState('');
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fontSize, setFontSize] = useState(14);
+  const fontSizeRef = useRef(fontSize);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
   const { activeSyntaxTheme } = useSettings();
+  const { addToast } = useToast();
+
+  // State for Code Folding
+  const [foldableRanges, setFoldableRanges] = useState<{ start: number; end: number }[]>([]);
+  const [foldedLines, setFoldedLines] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     setLoading(true);
@@ -49,6 +56,133 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
       .catch(() => setContent('Could not load file content.'))
       .finally(() => setLoading(false));
   }, [owner, repoName, file.path, branch]);
+
+  // Sync ref with state
+  useEffect(() => {
+    fontSizeRef.current = fontSize;
+  }, [fontSize]);
+
+  // Calculate foldable code ranges when content is loaded
+  useEffect(() => {
+    if (content) {
+        const lines = content.split('\n');
+        const ranges: { start: number; end: number }[] = [];
+        const stack: number[] = []; // Stack of line numbers for opening braces
+
+        lines.forEach((line, i) => {
+            const lineNumber = i + 1;
+            // Simple heuristic: ignore lines that are likely comments or strings
+            const trimmedLine = line.trim();
+            if (!trimmedLine.startsWith('//') && !trimmedLine.startsWith('*')) {
+                const openBraces = (line.match(/{/g) || []).length;
+                const closeBraces = (line.match(/}/g) || []).length;
+                
+                for (let j = 0; j < openBraces; j++) {
+                    stack.push(lineNumber);
+                }
+                for (let j = 0; j < closeBraces; j++) {
+                    const startLine = stack.pop();
+                    if (startLine && lineNumber > startLine) {
+                        // Add a minimum line count to be foldable
+                        if (lineNumber - startLine > 1) {
+                            ranges.push({ start: startLine, end: lineNumber });
+                        }
+                    }
+                }
+            }
+        });
+        setFoldableRanges(ranges);
+        setFoldedLines(new Set()); // Reset folds on content change
+    }
+  }, [content]);
+
+  const toggleFold = (startLine: number) => {
+    setFoldedLines(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(startLine)) {
+            newSet.delete(startLine);
+        } else {
+            newSet.add(startLine);
+        }
+        return newSet;
+    });
+  };
+  
+  // Handle Zoom via Wheel (Ctrl + Scroll) or Touch Pinch
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    // --- Wheel Logic ---
+    const handleWheel = (e: WheelEvent) => {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // e.deltaY < 0 means scrolling up (zoom in)
+            // e.deltaY > 0 means scrolling down (zoom out)
+            const delta = e.deltaY > 0 ? -1 : 1;
+            
+            setFontSize(prev => {
+                const newSize = prev + delta;
+                return Math.min(Math.max(newSize, 10), 32); // Clamp between 10px and 32px
+            });
+        }
+    };
+
+    // --- Touch Logic (Pinch to Zoom) ---
+    let initialDistance: number | null = null;
+    let initialFontSize: number | null = null;
+
+    const getDistance = (touches: TouchList) => {
+        return Math.hypot(
+            touches[0].clientX - touches[1].clientX,
+            touches[0].clientY - touches[1].clientY
+        );
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches.length === 2) {
+            initialDistance = getDistance(e.touches);
+            initialFontSize = fontSizeRef.current;
+        }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length === 2 && initialDistance !== null && initialFontSize !== null) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const currentDistance = getDistance(e.touches);
+            const ratio = currentDistance / initialDistance;
+            const newSize = initialFontSize * ratio;
+            
+            setFontSize(Math.min(Math.max(newSize, 10), 32));
+        }
+    };
+
+    const handleTouchEnd = () => {
+        initialDistance = null;
+        initialFontSize = null;
+    };
+
+    // Use passive: false to allow preventDefault
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    
+    // Touch listeners
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', handleTouchEnd);
+
+    return () => {
+        container.removeEventListener('wheel', handleWheel);
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [loading]); // Re-attach if loading state changes (content re-renders)
 
   // Handle selection logic for both mouse and touch
   useEffect(() => {
@@ -108,8 +242,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
   const handleCopy = () => {
     if (content) {
       navigator.clipboard.writeText(content).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        addToast('File content copied to clipboard', 'success');
       });
     }
   };
@@ -120,6 +253,29 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
   
   // Use the utility to get the correct Prism language key
   const language = getLanguageFromFilename(file.name);
+
+  const getLineProps = (lineNumber: number) => {
+    const props: React.HTMLProps<HTMLElement> = {};
+    const range = foldableRanges.find(r => r.start === lineNumber);
+    
+    const containingFold = foldableRanges.find(r => foldedLines.has(r.start) && lineNumber > r.start && lineNumber < r.end);
+
+    if (containingFold) {
+        props.style = { display: 'none' };
+        return props;
+    }
+
+    if (range) {
+        props.className = 'foldable-line';
+        props.onClick = (e) => {
+            // Prevent text selection when folding
+            if (window.getSelection()?.toString()) return;
+            e.preventDefault();
+            toggleFold(lineNumber);
+        };
+    }
+    return props;
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -141,30 +297,17 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
     }
     return (
       <div className="relative group">
-        <button
-          onClick={handleCopy}
-          aria-label="Copy code"
-          className="absolute top-2 right-2 z-10 flex items-center px-2 py-1 text-xs bg-base-200 dark:bg-base-700 hover:bg-base-300 dark:hover:bg-base-600 rounded-md transition opacity-0 group-hover:opacity-100 focus:opacity-100"
-        >
-          {copied ? <Check size={14} className="mr-1 text-green-500" /> : <Copy size={14} className="mr-1" />}
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-        {/* 
-            CRITICAL FIX: 
-            1. parent has select-none.
-            2. SyntaxHighlighter needs userSelect: 'text' and cursor: 'text' to create a selection island.
-            3. margin: 0 ensures the highlighter fills the selectable area without gaps.
-        */}
         <SyntaxHighlighter
           language={language}
           style={activeSyntaxTheme}
           showLineNumbers
           wrapLines
+          lineProps={getLineProps}
           customStyle={{ margin: 0, paddingTop: '2.5rem', userSelect: 'text', cursor: 'text' }}
           codeTagProps={{ 
             style: { 
                 fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace', 
-                fontSize: '14px',
+                fontSize: `${fontSize}px`,
                 userSelect: 'text'
             } 
           }}
@@ -187,24 +330,36 @@ const FileViewer: React.FC<FileViewerProps> = ({ owner, repoName, file, onClose,
                 <FileIcon size={16} className="mr-2 text-gray-500" />
                 <span className="truncate">{file.path}</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+                <button 
+                  onClick={handleCopy}
+                  className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition text-gray-600 dark:text-gray-300"
+                  title="Copy file content"
+                >
+                  <Copy size={18} />
+                </button>
                 {file.download_url && (
-                <a href={file.download_url} download target="_blank" rel="noopener noreferrer" className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition text-gray-600 dark:text-gray-300">
+                <a 
+                  href={file.download_url} 
+                  download 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition text-gray-600 dark:text-gray-300"
+                  title="Download raw file"
+                >
                     <Download size={18} />
                 </a>
                 )}
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition text-gray-600 dark:text-gray-300">
+                <button 
+                  onClick={onClose} 
+                  className="p-2 rounded-full hover:bg-base-100 dark:hover:bg-base-800 transition text-gray-600 dark:text-gray-300"
+                  title="Close"
+                >
                 <X size={18} />
                 </button>
             </div>
             </header>
             
-            {/* 
-                CRITICAL FIX: 
-                Added `select-none cursor-default` to the container. 
-                This prevents selection starting in padding, whitespace, or background.
-                Child elements (Markdown/Code) override this with select-text.
-            */}
             <div 
                 className="p-4 overflow-auto relative flex-1 text-gray-800 dark:text-gray-200 select-none cursor-default" 
                 ref={contentRef}

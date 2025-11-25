@@ -1,10 +1,10 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Zap, Shield, Smartphone, Terminal, Star, Sparkles, Layout, Globe, MessageSquare } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import { GitStufIcon } from '../assets/icon';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 // New Component for Scroll Animations
 const RevealOnScroll = ({ 
@@ -98,6 +98,8 @@ const TestimonialCard: React.FC<{ name: string, role: string, text: string, avat
 export default function LandingPage() {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const themeContext = useContext(ThemeContext);
+  const mode = themeContext?.mode || 'light';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,14 +108,30 @@ export default function LandingPage() {
     }
   };
 
+  const radialGradientStyle: React.CSSProperties = {
+    backgroundImage: mode === 'light' 
+      ? `radial-gradient(ellipse 200% 100% at 50% -20%, rgb(var(--color-secondary) / 0.2), transparent)`
+      : `radial-gradient(ellipse 200% 100% at 50% -20%, rgb(var(--color-primary) / 0.3), transparent 80%)`
+  };
+
+  const auroraStyle: React.CSSProperties = {
+    '--aurora': `repeating-linear-gradient(100deg, rgb(var(--color-primary)) 10%, rgb(var(--color-secondary)) 25%, rgb(var(--color-primary)) 40%)`
+  } as React.CSSProperties;
+
   return (
     <div className="min-h-screen flex flex-col bg-base-50 dark:bg-base-950 overflow-x-hidden">
       <Header />
       
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full -z-10 bg-[radial-gradient(ellipse_200%_100%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_200%_100%_at_50%_-20%,rgba(39,39,42,0.9),rgba(3,7,18,0.9))]" />
-        <div className="absolute inset-0 z-0 opacity-10 [--aurora:repeating-linear-gradient(100deg,theme(colors.blue.500)_10%,theme(colors.purple.500)_20%,theme(colors.pink.500)_30%,theme(colors.blue.500)_40%)] [background-image:var(--aurora)] [background-size:200%_100%] animate-aurora"></div>
+        <div 
+          className="absolute top-0 left-0 w-full h-full -z-10"
+          style={radialGradientStyle}
+        />
+        <div 
+          className="absolute inset-0 z-0 opacity-10 [background-image:var(--aurora)] [background-size:200%_100%] animate-aurora"
+          style={auroraStyle}
+        ></div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
           <RevealOnScroll direction="down">
@@ -150,7 +168,7 @@ export default function LandingPage() {
                     placeholder="Search repositories (e.g., facebook/react)..."
                     className="w-full px-4 py-3 bg-transparent focus:outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
                     />
-                    <button type="submit" className="px-6 py-2 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors">
+                    <button type="submit" className="px-6 py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors">
                     Search
                     </button>
                 </div>

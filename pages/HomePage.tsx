@@ -1,11 +1,12 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { githubApi } from '../services/githubApi';
 import { Repo } from '../types';
 import RepoCard from '../components/RepoCard';
-import { Search, ServerCrash, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ListFilter, ChevronDown } from 'lucide-react';
 import Header from '../components/common/Header';
+import Footer from '../components/common/Footer';
+import ErrorDisplay from '../components/common/ErrorDisplay';
 import { useSettings } from '../contexts/SettingsContext';
 
 const SkeletonCard: React.FC = () => (
@@ -26,51 +27,85 @@ const SkeletonCard: React.FC = () => (
 );
 
 export default function HomePage() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { openSettingsModal } = useSettings();
+  // Use setSearchParams to update the URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const initialQuery = searchParams.get('q') || 'react';
+  // Initialize page from URL, default to 1 if missing
+  const initialPage = parseInt(searchParams.get('page') || '1', 10);
+  // Initialize sort from URL, default to 'best-match' (GitHub default)
+  const initialSort = searchParams.get('sort') || 'best-match';
   
   const [query, setQuery] = useState(initialQuery);
   const [searchTerm, setSearchTerm] = useState(initialQuery);
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [error, setError] = useState<any>(null);
+  
+  // Sync state with URL param
+  const [page, setPage] = useState(initialPage);
+  const [sort, setSort] = useState(initialSort);
   const [totalPages, setTotalPages] = useState(0);
+
+  // Custom Dropdown State
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
 
   const fetchRepos = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await githubApi.searchRepositories(searchTerm, 'stars', 'desc', page);
+      // Pass the selected sort option. 'best-match' will be handled by the API service (omitted from params).
+      const { data } = await githubApi.searchRepositories(searchTerm, sort, 'desc', page);
       setRepos(data.items);
       // Github API search limit is 1000 results. 12 per page = ~84 pages max.
       setTotalPages(Math.min(Math.ceil(data.total_count / 12), 84));
     } catch (err: any) {
-      if (err.response && err.response.status === 403) {
-        setError('API rate limit exceeded. Your token might be invalid or missing the `public_repo` scope.');
-        openSettingsModal();
-      } else {
-        setError('Failed to fetch repositories.');
-      }
+      setError(err);
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, page, openSettingsModal]);
+  }, [searchTerm, page, sort]);
 
   useEffect(() => {
     fetchRepos();
   }, [fetchRepos]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+            setIsSortOpen(false);
+        }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
         setPage(1);
         setSearchTerm(query);
-        navigate(`/search?q=${encodeURIComponent(query)}`);
+        // Update URL with new query, reset page to 1, keep current sort
+        setSearchParams({ q: query, page: '1', sort: sort });
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+      setPage(newPage);
+      // Update URL to reflect new page number and keep sort
+      setSearchParams({ q: searchTerm, page: newPage.toString(), sort: sort });
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSortSelect = (newSort: string) => {
+      setSort(newSort);
+      setPage(1); // Reset to first page on sort change
+      setSearchParams({ q: searchTerm, page: '1', sort: newSort });
+      setIsSortOpen(false);
   };
 
   const renderPagination = () => {
@@ -107,7 +142,7 @@ export default function HomePage() {
     return (
         <div className="flex items-center space-x-1.5 overflow-x-auto p-2">
              <button 
-                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                onClick={() => handlePageChange(Math.max(1, page - 1))} 
                 disabled={page === 1} 
                 className="p-2 bg-white dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-lg disabled:opacity-50 transition hover:bg-base-100 dark:hover:bg-base-800 disabled:hover:bg-white dark:disabled:hover:bg-base-900"
                 aria-label="Previous page"
@@ -121,7 +156,7 @@ export default function HomePage() {
                         <span className="px-2 text-gray-500">...</span>
                     ) : (
                         <button
-                            onClick={() => setPage(Number(p))}
+                            onClick={() => handlePageChange(Number(p))}
                             className={`min-w-[40px] h-10 flex items-center justify-center rounded-lg font-medium text-sm transition-colors border
                                 ${page === p 
                                     ? 'bg-primary text-white border-primary shadow-sm' 
@@ -136,7 +171,7 @@ export default function HomePage() {
             ))}
 
             <button 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                onClick={() => handlePageChange(Math.min(totalPages, page + 1))} 
                 disabled={page === totalPages} 
                 className="p-2 bg-white dark:bg-base-900 border border-base-300 dark:border-base-700 rounded-lg disabled:opacity-50 transition hover:bg-base-100 dark:hover:bg-base-800 disabled:hover:bg-white dark:disabled:hover:bg-base-900"
                 aria-label="Next page"
@@ -147,12 +182,21 @@ export default function HomePage() {
     );
   };
   
+  const sortOptions = [
+    { value: 'best-match', label: 'Best Match' },
+    { value: 'stars', label: 'Most Stars' },
+    { value: 'forks', label: 'Most Forks' },
+    { value: 'updated', label: 'Recently Updated' },
+  ];
+
+  const currentSortLabel = sortOptions.find(o => o.value === sort)?.label || 'Best Match';
+
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-10">
-            <form onSubmit={handleSearch} className="max-w-xl mx-auto">
+      <main className="container mx-auto px-4 py-8 flex-grow">
+        <div className="mb-8 max-w-xl mx-auto">
+            <form onSubmit={handleSearch} className="mb-4">
               <div className="relative">
                 <input
                   type="text"
@@ -164,30 +208,71 @@ export default function HomePage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               </div>
             </form>
+            
+            <div className="flex justify-end px-1 relative z-20" ref={sortRef}>
+                <button
+                    onClick={() => setIsSortOpen(!isSortOpen)}
+                    className="flex items-center space-x-2 bg-white dark:bg-base-900 rounded-lg border border-base-300 dark:border-base-700 px-4 py-2 shadow-sm hover:border-primary/50 dark:hover:border-primary/50 transition-colors group"
+                >
+                    <ListFilter size={16} className="text-gray-500 group-hover:text-primary transition-colors" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-primary transition-colors">Sort: {currentSortLabel}</span>
+                    <ChevronDown size={14} className={`text-gray-400 group-hover:text-primary transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isSortOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-base-900 rounded-xl shadow-xl border border-base-200 dark:border-base-800 py-2 animate-fade-in overflow-hidden">
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Sort Repositories
+                        </div>
+                        {sortOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => handleSortSelect(option.value)}
+                                className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between transition-colors
+                                    ${sort === option.value 
+                                        ? 'bg-base-50 dark:bg-base-800 text-primary font-medium' 
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-base-50 dark:hover:bg-base-800'
+                                    }
+                                `}
+                            >
+                                <span>{option.label}</span>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    sort === option.value 
+                                    ? 'border-primary' 
+                                    : 'border-base-300 dark:border-base-600'
+                                }`}>
+                                    {sort === option.value && (
+                                        <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
+                                    )}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
 
         {error && (
-          <div className="text-center py-10 text-red-500 flex flex-col items-center">
-            <ServerCrash size={48} className="mb-4" />
-            <p className="text-lg">{error}</p>
-            <p className="text-sm text-gray-500 dark:text-base-400 mt-2">The settings modal has been opened for you to add a valid token.</p>
-          </div>
+           <ErrorDisplay error={error} onRetry={fetchRepos} />
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
-          ) : (
-            repos.map((repo) => <RepoCard key={repo.id} repo={repo} />)
-          )}
-        </div>
+        {!error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+                Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+            ) : (
+                repos.map((repo) => <RepoCard key={repo.id} repo={repo} />)
+            )}
+            </div>
+        )}
 
-        {!loading && repos.length > 0 && (
+        {!loading && !error && repos.length > 0 && (
           <div className="flex justify-center mt-12">
             {renderPagination()}
           </div>
         )}
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }

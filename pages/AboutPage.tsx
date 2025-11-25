@@ -1,158 +1,119 @@
-
 import React from 'react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import { Code, Database, Cpu, Globe, Zap, Layout, MessageSquare, Share2, GitPullRequest, Bookmark, ArrowRight } from 'lucide-react';
-
-const RoadmapItem: React.FC<{ icon: React.ElementType, title: string, desc: string, badge?: string }> = ({ icon: Icon, title, desc, badge }) => (
-  <div className="flex flex-col h-full p-6 bg-white dark:bg-base-900 rounded-xl border border-base-200 dark:border-base-800 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-all duration-300">
-    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-        <Icon size={100} />
-    </div>
-    <div className="flex items-center justify-between mb-4 relative z-10">
-        <div className="p-3 bg-base-100 dark:bg-base-800 rounded-lg text-primary">
-            <Icon size={24} />
-        </div>
-        {badge && (
-            <span className="px-2 py-1 text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg">
-                {badge}
-            </span>
-        )}
-    </div>
-    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 relative z-10">{title}</h3>
-    <p className="text-gray-600 dark:text-base-400 text-sm leading-relaxed relative z-10">{desc}</p>
-  </div>
-);
+import { Code, Cpu, Shield, Layout, Zap, ArrowRight, GitBranch, Calendar, Rocket, Sparkles } from 'lucide-react';
+import { GitStufIcon } from '../assets/icon';
 
 const AboutPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-base-50 dark:bg-base-950">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
-          <section className="text-center mb-16 animate-fade-in">
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-6">
-              About GitStuf
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-base-300 leading-relaxed max-w-2xl mx-auto">
-              GitStuf is a modern, privacy-focused GitHub explorer built to provide a superior browsing experience for developers. 
-              We combine the power of GitHub's extensive database with cutting-edge AI to help you understand code faster.
-            </p>
-          </section>
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="relative text-center py-24 sm:py-32 overflow-hidden">
+            <div className="absolute inset-0 z-0 opacity-20 [--aurora:repeating-linear-gradient(100deg,theme(colors.primary)_10%,theme(colors.secondary)_30%,theme(colors.primary)_50%)] [background-image:var(--aurora)] [background-size:300%_100%] animate-aurora"></div>
+            <div className="sparkle-bg"></div>
+            <div className="container mx-auto px-4 relative z-10 animate-fade-in">
+                <div className="inline-block p-4 mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/10 shadow-lg">
+                    <GitStufIcon className="w-16 h-16" />
+                </div>
+                <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 mb-8 tracking-tight">
+                    More than a Browser. It's an Insight Engine.
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-600 dark:text-base-300 leading-relaxed max-w-3xl mx-auto">
+                    We're on a mission to make open-source code more accessible and understandable for everyone, from students to senior engineers.
+                </p>
+            </div>
+        </section>
 
-          {/* Tech Stack */}
-          <section className="mb-20">
-             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 flex items-center justify-center md:justify-start">
-              <Database className="mr-3 text-blue-500" /> Under the Hood
-            </h2>
-            <div className="bg-white dark:bg-base-900 rounded-2xl border border-base-200 dark:border-base-800 p-8 shadow-sm">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                    <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Code className="text-blue-500 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">React 19</span>
-                    </div>
-                    <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Code className="text-blue-400 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">TypeScript</span>
-                    </div>
-                    <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Layout className="text-teal-400 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">Tailwind CSS</span>
-                    </div>
-                    <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Globe className="text-orange-500 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">React Router</span>
-                    </div>
-                     <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Cpu className="text-purple-500 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">Axios</span>
-                    </div>
-                     <div className="flex flex-col items-center text-center p-2 hover:-translate-y-1 transition-transform duration-300">
-                        <Layout className="text-gray-500 mb-3" size={32} />
-                        <span className="font-semibold dark:text-white">Lucide Icons</span>
+        {/* Our Journey Section */}
+        <section className="py-24 bg-white dark:bg-base-900">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Our Journey</h2>
+                    <p className="text-lg text-gray-600 dark:text-base-400 max-w-3xl mx-auto">
+                        From a simple idea to an AI-powered tool.
+                    </p>
+                </div>
+                <div className="relative max-w-2xl mx-auto">
+                    <div className="absolute left-3.5 sm:left-1/2 top-4 h-[calc(100%-2rem)] w-1 bg-gradient-to-b from-transparent via-primary/20 to-transparent"></div>
+                    {[
+                        { icon: GitBranch, date: 'Q4 2023', title: 'Concept & First Commit', text: 'The idea for a minimalist GitHub reader was born. The first lines of code were written, focusing on a clean, fast file explorer.' },
+                        { icon: Sparkles, date: 'Q1 2024', title: 'AI Integration', text: 'We integrated Google Gemini, introducing the "Explain Code" feature and repository summarization to provide deeper insights.' },
+                        { icon: Rocket, date: 'Q2 2024', title: 'Version 2.0 Launch', text: 'Launched with a refined UI, multiple themes, and a robust feature set, establishing GitStuf as a powerful developer tool.' },
+                        { icon: Calendar, date: 'Present', title: 'Continuous Improvement', text: 'We are constantly adding new features, themes, and performance enhancements based on community feedback.' },
+                    ].map((item, i) => (
+                        <div key={i} className="relative flex items-start sm:items-center sm:gap-x-8 mb-12">
+                            <div className={`hidden sm:flex w-1/2 ${i % 2 === 0 ? 'justify-end' : ''}`}>
+                                {i % 2 !== 0 && (
+                                    <div className="w-full p-6 bg-base-50 dark:bg-base-800/50 rounded-xl border border-base-200 dark:border-base-700 shadow-sm">
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                                        <p className="text-sm text-gray-600 dark:text-base-400">{item.text}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="absolute sm:relative left-0 sm:left-auto flex-shrink-0 z-10">
+                                <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center ring-8 ring-base-50 dark:ring-base-900">
+                                    <item.icon size={16} />
+                                </div>
+                            </div>
+                            <div className="w-full sm:w-1/2 pl-12 sm:pl-0">
+                                <p className="text-sm font-semibold text-primary mb-1">{item.date}</p>
+                                <div className={`${i % 2 === 0 ? '' : 'sm:hidden'}`}>
+                                    <div className="w-full p-6 bg-base-50 dark:bg-base-800/50 rounded-xl border border-base-200 dark:border-base-700 shadow-sm">
+                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                                        <p className="text-sm text-gray-600 dark:text-base-400">{item.text}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        {/* Core Principles Section */}
+        <section className="py-24">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Core Principles</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {[
+                        { icon: Code, title: 'Focus on Code', text: 'A clean, distraction-free interface that puts the content first.' },
+                        { icon: Cpu, title: 'AI-Powered Context', text: 'Turn raw code into insights with integrated Google Gemini.' },
+                        { icon: Shield, title: 'Client-Side Privacy', text: 'Your tokens and data never leave your browser.' },
+                        { icon: Layout, title: 'Elegant Design', text: 'A thoughtful, mobile-first design that works everywhere.' },
+                    ].map((item, i) => (
+                        <div key={i} className="bg-base-50 dark:bg-base-950/50 p-6 rounded-2xl border border-base-200 dark:border-base-800 hover:-translate-y-1 hover:shadow-xl hover:border-primary/30 transition-all duration-300">
+                            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 text-primary rounded-xl mb-4">
+                                <item.icon size={24} />
+                            </div>
+                            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">{item.title}</h3>
+                            <p className="text-sm text-gray-600 dark:text-base-400 leading-relaxed">{item.text}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24">
+            <div className="container mx-auto px-4">
+                <div className="bg-gradient-to-r from-primary to-secondary text-white rounded-3xl p-12 text-center relative overflow-hidden">
+                    <div className="absolute -inset-2 bg-base-900/50 mix-blend-multiply rounded-3xl"></div>
+                    <div className="relative z-10">
+                        <h2 className="text-3xl font-bold mb-6">Ready to explore?</h2>
+                        <p className="text-white/80 mb-8 max-w-xl mx-auto">
+                            Dive into your favorite repositories with a fresh perspective.
+                        </p>
+                        <a href="/#/search" className="inline-flex items-center px-8 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-transform hover:scale-105 shadow-lg">
+                            Start Searching <ArrowRight className="ml-2" size={18} />
+                        </a>
                     </div>
                 </div>
             </div>
-          </section>
-
-          {/* APIs Section */}
-          <section className="mb-20">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 flex items-center justify-center md:justify-start">
-              <Zap className="mr-3 text-yellow-500" /> Powered By
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 bg-white dark:bg-base-900 rounded-xl border border-base-200 dark:border-base-800 shadow-sm hover:border-primary/50 transition-colors group">
-                <div className="flex items-center mb-4">
-                    <div className="p-2 bg-black text-white rounded-lg mr-4 group-hover:scale-110 transition-transform"><Globe size={24} /></div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">GitHub REST API</h3>
-                </div>
-                <p className="text-gray-600 dark:text-base-400">
-                  The backbone of GitStuf. We fetch real-time data about repositories, users, commits, and issues directly from GitHub's official API, ensuring you always see the latest changes.
-                </p>
-              </div>
-              
-              <div className="p-6 bg-white dark:bg-base-900 rounded-xl border border-base-200 dark:border-base-800 shadow-sm hover:border-primary/50 transition-colors group">
-                <div className="flex items-center mb-4">
-                    <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg mr-4 group-hover:scale-110 transition-transform"><Cpu size={24} /></div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Google Gemini AI</h3>
-                </div>
-                <p className="text-gray-600 dark:text-base-400">
-                  Integrated into our core, Gemini AI powers our intelligent features: code explanation, repository summarization, and health checks. It turns raw code into human-readable insights.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Roadmap Section - New Feature */}
-          <section className="mb-20 relative">
-             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-3xl -z-10"></div>
-             <div className="p-8">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center">
-                    Future Roadmap
-                </h2>
-                <p className="text-center text-gray-600 dark:text-base-400 mb-10 max-w-xl mx-auto">
-                    We are just getting started. Here is what we are building next to make GitStuf the ultimate developer companion.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <RoadmapItem 
-                        icon={MessageSquare}
-                        title="Chat with Repo"
-                        badge="In Progress"
-                        desc="Ask questions like 'Where is the auth logic?' and get answers based on the entire codebase context using RAG (Retrieval-Augmented Generation)."
-                    />
-                    <RoadmapItem 
-                        icon={Share2}
-                        title="Visual Dependency Graph"
-                        desc="Interactive 2D/3D node graphs to visualize file dependencies and project architecture at a glance."
-                    />
-                     <RoadmapItem 
-                        icon={GitPullRequest}
-                        title="AI PR Reviewer"
-                        desc="Get instant AI summaries of Open Pull Requests to understand the impact of changes before you review the code."
-                    />
-                     <RoadmapItem 
-                        icon={Bookmark}
-                        title="Local Collections"
-                        desc="Create custom lists and bookmarks for repositories locally in your browser, without needing a GitHub account."
-                    />
-                </div>
-             </div>
-          </section>
-
-          <section className="text-center pt-8 border-t border-base-200 dark:border-base-800">
-             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Developed by RioDev
-            </h2>
-            <p className="text-gray-600 dark:text-base-400 mb-6">
-                A passionate developer dedicated to building beautiful, functional, and performant web applications.
-            </p>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-full hover:opacity-90 transition-opacity shadow-lg">
-                View on GitHub <ArrowRight size={18} className="ml-2" />
-            </a>
-          </section>
-        </div>
+        </section>
       </main>
       <Footer />
     </div>

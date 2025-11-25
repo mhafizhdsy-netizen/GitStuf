@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { githubApi } from '../services/githubApi';
@@ -27,7 +26,9 @@ const IssueList: React.FC<IssueListProps> = ({ owner, repo }) => {
           setHasMore(false);
         }
       })
-      .catch(() => setError('Failed to fetch issues.'))
+      .catch((err) => {
+        setError('Failed to fetch issues.');
+      })
       .finally(() => setLoading(false));
   }, [owner, repo, page]);
 

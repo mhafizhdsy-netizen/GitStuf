@@ -26,7 +26,7 @@ const LicenseViewer: React.FC<LicenseViewerProps> = ({ owner, repo }) => {
           setError('No license file found in this repository.');
         }
       })
-      .catch(() => {
+      .catch((err) => {
         setError('No license file found in this repository.');
       })
       .finally(() => setLoading(false));
